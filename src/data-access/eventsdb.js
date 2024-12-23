@@ -23,7 +23,7 @@ function makeEventsDb({ cockroach, UnknownError }) {
             INSERT INTO ${EVENT_TABLE}
             (name, description, user_id, visibility, location, is_disabled, store_count)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id, name, user_id, visibility, location, is_disabled, store_count;
+            RETURNING id, name, user_id, visibility, location, is_disabled, store_count, store_ids;
         `;
         const values = [name, description, userId, visibility, location, isDisabled, storeCount];
 
@@ -70,7 +70,7 @@ function makeEventsDb({ cockroach, UnknownError }) {
                 location = $4,
                 modified_at = $5
             WHERE id = $6 AND user_id = $7
-            RETURNING id, name, user_id, description, visibility, location, modified_at, store_count;
+            RETURNING id, name, user_id, description, visibility, location, modified_at, store_count, store_ids;
         `;
         const values = [name, description, visibility, location, modifiedAt, id, userId];
 
@@ -88,7 +88,7 @@ function makeEventsDb({ cockroach, UnknownError }) {
 
     async function getAllEvents() {
         const query = `
-            SELECT id, name, user_id, description, location, modified_at, store_count
+            SELECT id, name, user_id, description, location, modified_at, store_count, store_ids
             FROM ${EVENT_TABLE}
             WHERE is_disabled = false AND visibility = 'public';
         `;
@@ -104,7 +104,7 @@ function makeEventsDb({ cockroach, UnknownError }) {
 
     async function getUserEvents({ userId }) {
         const query = `
-            SELECT id, name, user_id, description, visibility, location, modified_at, store_count
+            SELECT id, name, user_id, description, visibility, location, modified_at, store_count, store_ids
             FROM ${EVENT_TABLE}
             WHERE user_id = $1 AND is_disabled = false;
         `;

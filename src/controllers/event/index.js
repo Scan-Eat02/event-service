@@ -6,7 +6,7 @@ const {
     deleteEvent,
     updateEvent,
     getUserEvents,
-    getAlEvents
+    getAllEvents,
 } = require('../../use-cases').eventUseCases;
 
 const makeCreateEventAction = require('./create-event');
@@ -39,7 +39,7 @@ const getUserEventsAction = makeGetUserEventsAction({
 
 const makeGetAllEventsAction = require('./get-all-events');
 const getAllEventsAction = makeGetAllEventsAction({
-    getAlEvents,
+    getAllEvents,
     formatResponse,
     formatError,
 });
