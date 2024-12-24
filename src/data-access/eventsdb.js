@@ -7,6 +7,7 @@ function makeEventsDb({ cockroach, UnknownError }) {
         updateEvent,
         getAllEvents,
         getUserEvents,
+        deleteEventStores,
     });
 
     // Create a new Event
@@ -92,7 +93,7 @@ function makeEventsDb({ cockroach, UnknownError }) {
             FROM ${EVENT_TABLE}
             WHERE is_disabled = false AND visibility = 'public';
         `;
-    
+
         try {
             const result = await cockroach.query(query);
             return result.rows; // Return all matching Events
@@ -109,12 +110,35 @@ function makeEventsDb({ cockroach, UnknownError }) {
             WHERE user_id = $1 AND is_disabled = false;
         `;
         const values = [userId];
-    
+
         try {
             const result = await cockroach.query(query, values);
             return result.rows; // Return all matching Events for the user
         } catch (error) {
             console.log('Error in getUserEvents:', error);
+            throw new UnknownError({ message: error });
+        }
+    }
+
+    async function deleteEventStores({ storeIds, userId }) {
+        const query = `
+            UPDATE ${EVENT_TABLE}
+            SET 
+                store_ids = array(SELECT UNNEST(store_ids) EXCEPT SELECT UNNEST($1::UUID[])),
+                store_count = array_length(array(SELECT UNNEST(store_ids) EXCEPT SELECT UNNEST($1::UUID[])), 1)
+            WHERE user_id = $2
+            RETURNING id, name, user_id, is_disabled, store_ids, store_count;
+        `;
+        const values = [storeIds, userId];
+    
+        try {
+            const result = await cockroach.query(query, values);
+            if (!result.rows.length) {
+                return []; // No stores found with the given criteria
+            }
+            return result.rows; // Return the updated stores
+        } catch (error) {
+            console.log('Error in deleteStores:', error);
             throw new UnknownError({ message: error });
         }
     }    
