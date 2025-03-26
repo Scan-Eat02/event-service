@@ -1,0 +1,12 @@
+{
+    "event-service": {
+      "replicas": 1,
+      "port": 3003,
+      "targetPort": 3000,
+      "image": "yashd26/scan_eat:event-service",
+      "env": {
+        "NODE_ENV": "prod"
+      }
+    }
+  }
+  
