@@ -25,10 +25,29 @@ const getAllEvents = makeGetAllEvents({
     eventsDb: allDbs.eventsDb,
 });
 
+const makeJoinStoreToEvent = require('./join-store-to-event');
+const joinStoreToEvent = makeJoinStoreToEvent({
+    eventsDb: allDbs.eventsDb,
+});
+
+const makeAcceptStoreRequest = require('./accept-store-request');
+const acceptStoreRequest = makeAcceptStoreRequest({
+    eventsDb: allDbs.eventsDb,
+    storeRequestsDb: allDbs.storeRequestsDb,
+});
+
+const makeCreateEventStoreRequest = require('./create-event-store-request');
+const createEventStoreRequest = makeCreateEventStoreRequest({
+    storeRequestsDb: allDbs.storeRequestsDb,
+});
+
 module.exports = Object.freeze({
     createEvent,
     deleteEvent,
     updateEvent,
     getUserEvents,
     getAllEvents,
+    joinStoreToEvent,
+    acceptStoreRequest,
+    createEventStoreRequest,
 });

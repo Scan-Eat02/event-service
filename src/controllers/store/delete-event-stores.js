@@ -1,4 +1,4 @@
-function makeDeleteEventStoresAction({ deleteEvent, formatResponse, formatError }) {
+function makeDeleteEventStoresAction({ deleteEventStores, formatResponse, formatError }) {
     return async function deleteEventStoresController({ req, res }) {
         try {
             // Extract store IDs from the request body
@@ -8,7 +8,7 @@ function makeDeleteEventStoresAction({ deleteEvent, formatResponse, formatError 
             }
 
             // Pass the array of store IDs to the use case
-            const result = await deleteEvent({ storeIds, userId });
+            const result = await deleteEventStores({ storeIds, userId });
             console.log('Stores deletion successful');
 
             return res.status(200).json(formatResponse({

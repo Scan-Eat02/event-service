@@ -8,7 +8,69 @@ function makeEventsDb({ cockroach, UnknownError }) {
         getAllEvents,
         getUserEvents,
         deleteEventStores,
+        joinStoreToEvent,
+        acceptStoreToEvent,
     });
+
+    async function acceptStoreToEvent({ eventId, storeId, userId }) {
+        try {
+            const query = `
+                UPDATE ${EVENT_TABLE}
+                SET 
+                    store_ids = array_append(store_ids, $1::UUID),
+                    store_count = COALESCE(array_length(store_ids, 1), 0) + 1
+                WHERE id = $2
+                    AND NOT ($1 = ANY(store_ids))  -- Prevent duplicate store
+                RETURNING id, name, user_id, store_ids, store_count;
+            `;
+            const values = [storeId, eventId];
+
+            const result = await cockroach.query(query, values);
+            if (!result.rows.length) {
+                return null;
+            }
+            return result.rows[0];
+        } catch (error) {
+            console.log('Error in joinStoreToEvent:', error);
+            throw new UnknownError({ message: error });
+        }
+    }
+
+    async function joinStoreToEvent({ eventId, storeId, userId }) {
+        // First check if the store belongs to the user
+        const storeCheckQuery = `
+            SELECT id FROM store
+            WHERE id = $1 AND user_id = $2;
+        `;
+        const storeCheckValues = [storeId, userId];
+
+        try {
+            const storeCheckResult = await cockroach.query(storeCheckQuery, storeCheckValues);
+            if (!storeCheckResult.rows.length) {
+                throw new Error('Store does not belong to the user');
+            }
+
+            const query = `
+                UPDATE ${EVENT_TABLE}
+                SET 
+                    store_ids = array_append(store_ids, $1::UUID),
+                    store_count = COALESCE(array_length(store_ids, 1), 0) + 1
+                WHERE id = $2 AND user_id = $3
+                    AND NOT ($1 = ANY(store_ids))  -- Prevent duplicate store
+                RETURNING id, name, user_id, store_ids, store_count;
+            `;
+            const values = [storeId, eventId, userId];
+
+            const result = await cockroach.query(query, values);
+            if (!result.rows.length) {
+                return null;
+            }
+            return result.rows[0];
+        } catch (error) {
+            console.log('Error in joinStoreToEvent:', error);
+            throw new UnknownError({ message: error });
+        }
+    }
 
     // Create a new Event
     async function createEvent({
